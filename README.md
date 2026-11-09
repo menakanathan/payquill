@@ -29,7 +29,7 @@ Mitchell's approval, and every AI output is validated before it is used (see [Ho
 You need Python 3.10 or newer.
 
 ```bash
-git clone <this repo> payquill && cd payquill
+git clone https://github.com/menakanathan/payquill.git payquill && cd payquill
 make demo            # creates .venv, installs, starts on http://localhost:5000
 ```
 
@@ -54,8 +54,8 @@ Open **http://localhost:5000**. Demo data loads automatically on first start.
 
 ### Option B: hosted demo
 
-`<hosted Render URL goes here>`, already connected to the PayPal sandbox.
-Sandbox buyer login for paying invoices: `<sandbox buyer email>` / `<sandbox buyer password>`
+`https://payquill.onrender.com/`, already connected to the PayPal sandbox.
+Sandbox buyer login for paying invoices: `sb-vkj1453810703@personal.example.com` / `GmquIr/5`
 (sandbox-only test credentials, never a real account).
 
 ### The four steps to try
