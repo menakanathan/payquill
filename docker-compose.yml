@@ -1,0 +1,13 @@
+services:
+  payquill:
+    build: .
+    ports:
+      - "5000:5000"
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - payquill-data:/app/data
+
+volumes:
+  payquill-data:

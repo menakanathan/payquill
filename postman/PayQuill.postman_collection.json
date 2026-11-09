@@ -1,0 +1,144 @@
+{
+  "info": {
+    "name": "PayQuill",
+    "description": "Every PayPal sandbox call PayQuill makes, plus the PayQuill API itself. Select the 'PayQuill sandbox' environment, fill in client_id, client_secret and buyer_email, then run 'Get access token' first.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "PayPal sandbox",
+      "item": [
+        {
+          "name": "Get access token",
+          "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": [
+            "const body = pm.response.json();",
+            "pm.environment.set('access_token', body.access_token);",
+            "pm.test('token issued', () => pm.expect(body.access_token).to.be.a('string'));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "auth": {"type": "basic", "basic": [
+              {"key": "username", "value": "{{client_id}}", "type": "string"},
+              {"key": "password", "value": "{{client_secret}}", "type": "string"}
+            ]},
+            "header": [{"key": "Accept", "value": "application/json"}],
+            "body": {"mode": "urlencoded", "urlencoded": [{"key": "grant_type", "value": "client_credentials"}]},
+            "url": "{{paypal_base}}/v1/oauth2/token"
+          }
+        },
+        {
+          "name": "Create invoice (Invoicing v2)",
+          "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": [
+            "const body = pm.response.json();",
+            "pm.environment.set('invoice_id', body.id);",
+            "pm.test('invoice created', () => pm.expect(body.id).to.match(/^INV2-/));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}]},
+            "header": [{"key": "Content-Type", "value": "application/json"}, {"key": "Prefer", "value": "return=representation"}],
+            "body": {"mode": "raw", "raw": "{\n  \"detail\": {\n    \"invoice_number\": \"VS-POSTMAN-{{$timestamp}}\",\n    \"currency_code\": \"USD\",\n    \"note\": \"Thank you for your business. - Verde Studio\",\n    \"payment_term\": {\"term_type\": \"DUE_ON_DATE_SPECIFIED\", \"due_date\": \"{{due_date}}\"}\n  },\n  \"invoicer\": {\"business_name\": \"Verde Studio\"},\n  \"primary_recipients\": [{\"billing_info\": {\"business_name\": \"Hillside HOA\", \"email_address\": \"{{buyer_email}}\"}}],\n  \"items\": [{\"name\": \"Phase 2: courtyard\", \"quantity\": \"1\", \"unit_amount\": {\"currency_code\": \"USD\", \"value\": \"4800.00\"}, \"unit_of_measure\": \"AMOUNT\"}],\n  \"configuration\": {\"allow_tip\": false}\n}"},
+            "url": "{{paypal_base}}/v2/invoicing/invoices"
+          }
+        },
+        {
+          "name": "Send invoice",
+          "request": {
+            "method": "POST",
+            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}]},
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\"send_to_invoicer\": false, \"send_to_recipient\": true}"},
+            "url": "{{paypal_base}}/v2/invoicing/invoices/{{invoice_id}}/send"
+          }
+        },
+        {
+          "name": "Get invoice (status and payer link)",
+          "request": {
+            "method": "GET",
+            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}]},
+            "url": "{{paypal_base}}/v2/invoicing/invoices/{{invoice_id}}"
+          }
+        },
+        {
+          "name": "Remind customer",
+          "request": {
+            "method": "POST",
+            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}]},
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\"subject\": \"Friendly reminder from Verde Studio\", \"note\": \"A friendly reminder that your invoice is due soon.\", \"send_to_invoicer\": false, \"send_to_recipient\": true}"},
+            "url": "{{paypal_base}}/v2/invoicing/invoices/{{invoice_id}}/remind"
+          }
+        },
+        {
+          "name": "Pay supplier (Payouts v1)",
+          "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": [
+            "const body = pm.response.json();",
+            "pm.environment.set('payout_batch_id', body.batch_header.payout_batch_id);"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}]},
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\n  \"sender_batch_header\": {\"sender_batch_id\": \"PQ-POSTMAN-{{$timestamp}}\", \"email_subject\": \"You have a payment from Verde Studio\", \"email_message\": \"Paid through PayQuill.\"},\n  \"items\": [{\"recipient_type\": \"EMAIL\", \"amount\": {\"value\": \"4729.92\", \"currency\": \"USD\"}, \"receiver\": \"{{payee_email}}\", \"note\": \"Bay Area Stone Supply BAS-10482\", \"sender_item_id\": \"bill-postman\"}]\n}"},
+            "url": "{{paypal_base}}/v1/payments/payouts"
+          }
+        },
+        {
+          "name": "Get payout status",
+          "request": {
+            "method": "GET",
+            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}]},
+            "url": "{{paypal_base}}/v1/payments/payouts/{{payout_batch_id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "PayQuill API",
+      "item": [
+        {"name": "Health", "request": {"method": "GET", "url": "{{base_url}}/healthz"}},
+        {"name": "Dashboard state", "request": {"method": "GET", "url": "{{base_url}}/api/state"}},
+        {
+          "name": "Draft invoice from a sentence",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\"text\": \"Bill Hillside HOA for phase 2 of the courtyard, $4,800, due in 15 days\"}"},
+            "url": "{{base_url}}/api/invoices/draft"
+          }
+        },
+        {
+          "name": "Create and send invoice",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\"customer_id\": 1, \"description\": \"Phase 2 of the courtyard\", \"milestone\": \"Phase 2\", \"amount\": \"4800.00\", \"due_date\": \"{{due_date}}\"}"},
+            "url": "{{base_url}}/api/invoices"
+          }
+        },
+        {"name": "Sync statuses with PayPal", "request": {"method": "POST", "url": "{{base_url}}/api/invoices/refresh"}},
+        {"name": "Read sample bill (Bay Area Stone)", "request": {"method": "POST", "url": "{{base_url}}/api/bills/sample/bay-area-stone"}},
+        {
+          "name": "Approve bill on recommended date",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\"choice\": \"recommended\"}"},
+            "url": "{{base_url}}/api/bills/{{bill_id}}/approve"
+          }
+        },
+        {
+          "name": "Demo clock: advance days and run the daily job",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\"days\": 6}"},
+            "url": "{{base_url}}/api/clock/advance"
+          }
+        },
+        {"name": "Run daily job", "request": {"method": "POST", "url": "{{base_url}}/api/scheduler/run"}},
+        {"name": "Reset demo data", "request": {"method": "POST", "url": "{{base_url}}/api/demo/reset"}}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PayQuill</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M26 4C16 6 9 13 7 24l-2 4 3-2c3-1 5-3 6-6l-5 1 7-3c4-3 8-8 10-14z' fill='%232F6B4F'/%3E%3C/svg%3E">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <svg class="quill" viewBox="0 0 32 32" aria-hidden="true"><path d="M26 4C16 6 9 13 7 24l-2 4 3-2c3-1 5-3 6-6l-5 1 7-3c4-3 8-8 10-14z"/></svg>
+      <span class="wordmark">PayQuill</span>
+      <span class="biz" id="biz"></span>
+    </div>
+    <div class="modes" id="modes" aria-label="Connections"></div>
+    <div class="clock">
+      <span id="today"></span>
+      <button class="tool" id="next-day" title="Move the demo clock forward one day and run the daily job">Next day</button>
+      <button class="tool" id="run-job" title="Send due reminders and release scheduled payouts">Run daily job</button>
+      <button class="tool quiet" id="reset">Reset demo</button>
+    </div>
+  </header>
+
+  <div class="page">
+    <div class="banner" id="banner" hidden></div>
+
+    <section class="summary" id="summary" aria-label="Cash summary"></section>
+
+    <main class="layout">
+      <div class="main-col">
+        <section class="section" aria-labelledby="h-new">
+          <header class="section-head">
+            <div>
+              <h2 id="h-new">New invoice</h2>
+              <p>Describe the job in one sentence. Claude writes the PayPal invoice; you check it and send.</p>
+            </div>
+          </header>
+          <div class="section-body">
+            <form class="composer" id="composer">
+              <label for="sentence" class="sr-only">Describe the job</label>
+              <textarea id="sentence" rows="2" placeholder="Bill Hillside HOA for phase 2 of the courtyard, $4,800, due in 15 days"></textarea>
+              <div class="composer-actions">
+                <button type="button" class="link" id="use-example">Use the example</button>
+                <button type="submit" class="primary" id="draft-btn">Draft invoice</button>
+              </div>
+            </form>
+            <div id="draft" hidden></div>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="h-inv">
+          <header class="section-head">
+            <div>
+              <h2 id="h-inv">Invoices <span class="count" id="inv-count"></span></h2>
+              <p>Late-pay risk comes from a model trained on your own payment history. Reminders are written by Claude for each customer.</p>
+            </div>
+            <button class="secondary small" id="sync">Check PayPal now</button>
+          </header>
+          <div class="section-body flush">
+            <div class="table-wrap"><table class="ledger" id="invoices"></table></div>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="h-bill">
+          <header class="section-head">
+            <div>
+              <h2 id="h-bill">Supplier bills <span class="count" id="bill-count"></span></h2>
+              <p>Upload a bill as a PDF or a photo. Claude reads the terms, PayQuill picks the best day to pay, and PayPal Payouts sends it on that day.</p>
+            </div>
+          </header>
+          <div class="section-body">
+            <div class="upload">
+              <label class="drop" id="drop">
+                <input type="file" id="bill-file" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt" hidden>
+                <span>Drop a bill PDF or photo here, or <u>choose a file</u></span>
+              </label>
+              <div class="samples">
+                <span>No bill handy? Try a sample:</span>
+                <button class="chip-btn" data-sample="bay-area-stone">Bay Area Stone (2/10 net 30)</button>
+                <a class="dl" href="/samples/bay-area-stone.pdf">Download the PDF</a>
+              </div>
+            </div>
+            <div id="review"></div>
+          </div>
+          <div class="section-body flush top-rule">
+            <div class="table-wrap"><table class="ledger" id="bills"></table></div>
+          </div>
+        </section>
+      </div>
+
+      <aside class="side-col">
+        <section class="section" aria-labelledby="h-cash">
+          <header class="section-head">
+            <div>
+              <h2 id="h-cash">Cash forecast</h2>
+              <p>Next 30 days, from open invoices and scheduled payouts.</p>
+            </div>
+          </header>
+          <div class="section-body">
+            <div id="forecast-note" class="note"></div>
+            <div id="chart" class="chart"></div>
+            <ul class="flows" id="flows"></ul>
+          </div>
+        </section>
+        <section class="section" aria-labelledby="h-log">
+          <header class="section-head">
+            <div>
+              <h2 id="h-log">Activity</h2>
+              <p>Every PayPal call and AI decision, newest first.</p>
+            </div>
+          </header>
+          <div class="section-body flush">
+            <ol class="log" id="log"></ol>
+          </div>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="/static/app.js"></script>
+</body>
+</html>

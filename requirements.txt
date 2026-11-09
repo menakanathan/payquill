@@ -1,0 +1,7 @@
+Flask>=3.0
+requests>=2.31
+numpy>=1.26
+pypdf>=4.0
+reportlab>=4.0
+python-dotenv>=1.0
+gunicorn>=22.0; sys_platform != "win32"
